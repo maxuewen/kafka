@@ -275,9 +275,11 @@ class Log(@volatile private var _dir: File,
   @volatile private var highWatermarkMetadata: LogOffsetMetadata = LogOffsetMetadata(logStartOffset)
 
   /* the actual segments of the log */
+  //[startOffset:segment]
   private val segments: ConcurrentNavigableMap[java.lang.Long, LogSegment] = new ConcurrentSkipListMap[java.lang.Long, LogSegment]
 
   // Visible for testing
+  //是一个缓存类数据，里面保存了分区 Leader 的 Epoch 值与对应位移值的映射关系
   @volatile var leaderEpochCache: Option[LeaderEpochFileCache] = None
 
   locally {
