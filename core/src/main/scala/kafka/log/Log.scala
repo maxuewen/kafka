@@ -87,7 +87,7 @@ object LogAppendInfo {
  * @param lastOffsetOfFirstBatch The last offset of the first batch
  */
 case class LogAppendInfo(var firstOffset: Option[Long],
-                         var lastOffset: Long,
+                         var lastOffset: Long,  //指向消息集合的最后一条消息
                          var maxTimestamp: Long,
                          var offsetOfMaxTimestamp: Long,
                          var logAppendTime: Long,
@@ -98,7 +98,7 @@ case class LogAppendInfo(var firstOffset: Option[Long],
                          shallowCount: Int,
                          validBytes: Int,
                          offsetsMonotonic: Boolean,
-                         lastOffsetOfFirstBatch: Long,
+                         lastOffsetOfFirstBatch: Long,  //指向消息集合的最后一条消息
                          recordErrors: Seq[RecordError] = List(),
                          errorMessage: String = null) {
   /**
@@ -150,6 +150,7 @@ case class LogReadInfo(fetchedData: FetchDataInfo,
  *                   COMMIT/ABORT control record which indicates the transaction's completion.
  * @param isAborted Whether or not the transaction was aborted
  */
+//记录已完成事务的元数据，主要用于构建事务索引
 case class CompletedTxn(producerId: Long, firstOffset: Long, lastOffset: Long, isAborted: Boolean) {
   override def toString: String = {
     "CompletedTxn(" +
@@ -163,6 +164,7 @@ case class CompletedTxn(producerId: Long, firstOffset: Long, lastOffset: Long, i
 /**
  * A class used to hold params required to decide to rotate a log segment or not.
  */
+//定义用于控制日志段是否切分（Roll）的数据结构
 case class RollParams(maxSegmentMs: Long,
                       maxSegmentBytes: Int,
                       maxTimestampInMessages: Long,
@@ -409,8 +411,8 @@ class Log(@volatile private var _dir: File,
 
     lock synchronized {
       highWatermarkMetadata = newHighWatermark
-      producerStateManager.onHighWatermarkUpdated(newHighWatermark.messageOffset)
-      maybeIncrementFirstUnstableOffset()
+      producerStateManager.onHighWatermarkUpdated(newHighWatermark.messageOffset) //事务相关
+      maybeIncrementFirstUnstableOffset() //事务相关
     }
     trace(s"Setting high watermark $newHighWatermark")
   }
@@ -1270,7 +1272,7 @@ class Log(@volatile private var _dir: File,
    * Increment the log start offset if the provided offset is larger.
    */
   def maybeIncrementLogStartOffset(newLogStartOffset: Long, reason: LogStartOffsetIncrementReason): Unit = {
-    // We don't have to write the log start offset to log-start-offset-checkpoint immediately.
+    // We don't have to write the log start offset to log-start-offset-checkpoint immediately#立即.
     // The deleteRecordsOffset may be lost only if all in-sync replicas of this broker are shutdown
     // in an unclean manner within log.flush.start.offset.checkpoint.interval.ms. The chance of this happening is low.
     maybeHandleIOException(s"Exception while increasing log start offset for $topicPartition to $newLogStartOffset in dir ${dir.getParent}") {
@@ -1711,12 +1713,15 @@ class Log(@volatile private var _dir: File,
       val numToDelete = deletable.size
       if (numToDelete > 0) {
         // we must always have at least one segment, so if we are going to delete all the segments, create a new one first
+        // 不允许删除所有日志段对象。如果一定要做，先创建出一个新的来，然后再把前面N个删掉
         if (segments.size == numToDelete)
           roll()
         lock synchronized {
           checkIfMemoryMappedBufferClosed()
           // remove the segments for lookups
+          // 删除给定的日志段对象以及底层的物理文件
           removeAndDeleteSegments(deletable, asyncDelete = true)
+          // 尝试更新日志的Log Start Offset值
           maybeIncrementLogStartOffset(segments.firstEntry.getValue.baseOffset, SegmentDeletion)
         }
       }
@@ -1736,6 +1741,12 @@ class Log(@volatile private var _dir: File,
    *                  (if there is one) and returns true iff it is deletable
    * @return the segments ready to be deleted
    */
+  // 从具有最小起始位移值的日志段对象开始遍历，直到满足以下条件之一便停止遍历：
+  //1. 测定条件函数predicate = false
+  //2. 扫描到包含Log对象高水位值所在的日志段对象
+  //3. 最新的日志段对象不包含任何消息
+  //最新日志段对象是segments中Key值最大对应的那个日志段，也就是我们常说的Active Segment。完全为空的Active Segment如果被允许删除，后面还要重建它，故代码这里不允许删除大小为空的Active Segment。
+  //在遍历过程中，同时不满足以上3个条件的所有日志段都是可以被删除的！
   private def deletableSegments(predicate: (LogSegment, Option[LogSegment]) => Boolean): Iterable[LogSegment] = {
     if (segments.isEmpty) {
       Seq.empty

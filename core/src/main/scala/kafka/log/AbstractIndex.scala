@@ -17,7 +17,7 @@
 
 package kafka.log
 
-import java.io.{Closeable, File, RandomAccessFile}
+import java.io.{Closeable, File, IOException, RandomAccessFile}
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.{ByteBuffer, MappedByteBuffer}
@@ -43,7 +43,7 @@ abstract class AbstractIndex(@volatile private var _file: File, val baseOffset: 
   // Length of the index file
   @volatile
   private var _length: Long = _
-  protected def entrySize: Int
+  protected def entrySize: Int  //一个索引项的大小
 
   /*
    Kafka mmaps index files into memory, and all the read / write operations of the index is through OS page cache. This
@@ -62,7 +62,7 @@ abstract class AbstractIndex(@volatile private var _file: File, val baseOffset: 
    algorithm will read index entries in page #0, 6, 9, 11, and 12.
    page number: |0|1|2|3|4|5|6|7|8|9|10|11|12 |
    steps:       |1| | | | | |3| | |4|  |5 |2/6|
-   In each page, there are hundreds log entries, corresponding to hundreds to thousands of kafka messages. When the
+   In each page, there are hundreds log entries, corresponding#相应的 to hundreds to thousands of kafka messages. When the
    index gradually growing from the 1st entry in page #12 to the last entry in page #12, all the write (append)
    operations are in page #12, and all the in-sync follower / consumer lookups read page #0,6,9,11,12. As these pages
    are always used in each in-sync lookup, we can assume these pages are fairly recently used, and are very likely to be
@@ -349,6 +349,7 @@ abstract class AbstractIndex(@volatile private var _file: File, val baseOffset: 
    * @param n the slot
    * @return the index entry stored in the given slot.
    */
+  //查找索引项
   protected def parseEntry(buffer: ByteBuffer, n: Int): IndexEntry
 
   /**

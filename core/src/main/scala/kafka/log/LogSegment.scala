@@ -58,7 +58,7 @@ class LogSegment private[log] (val log: FileRecords,
                                val lazyTimeIndex: LazyIndex[TimeIndex],
                                val txnIndex: TransactionIndex,
                                val baseOffset: Long,
-                               val indexIntervalBytes: Int,
+                               val indexIntervalBytes: Int,//写入多少字节后新增一条索引项
                                val rollJitterMs: Long,
                                val time: Time) extends Logging {
 
@@ -109,7 +109,7 @@ class LogSegment private[log] (val log: FileRecords,
     _maxTimestampSoFar.get
   }
 
-  @volatile private var _offsetOfMaxTimestampSoFar: Option[Long] = None
+  @volatile var _offsetOfMaxTimestampSoFar: Option[Long] = None
   def offsetOfMaxTimestampSoFar_=(offset: Long): Unit = _offsetOfMaxTimestampSoFar = Some(offset)
   def offsetOfMaxTimestampSoFar: Long = {
     if (_offsetOfMaxTimestampSoFar.isEmpty)

@@ -75,7 +75,7 @@ object RequestChannel extends Logging {
     }
   }
 
-  class Request(val processor: Int,
+  class Request(val processor: Int, //Processor 线程的序号,Processor 线程仅仅是网络接收线程
                 val context: RequestContext,
                 val startTimeNanos: Long,
                 memoryPool: MemoryPool,
