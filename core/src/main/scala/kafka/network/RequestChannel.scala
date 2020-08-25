@@ -276,6 +276,10 @@ object RequestChannel extends Logging {
   }
 
   /** responseAsString should only be defined if request logging is enabled */
+  /*
+  Kafka 大多数 Request 处理完成后都需要执行一段回调逻辑，SendResponse 就是保存返回结果的 Response 子类。
+  里面最重要的字段是 onCompletionCallback，即指定处理完成之后的回调逻辑。
+   */
   class SendResponse(request: Request,
                      val responseSend: Send,
                      val responseAsString: Option[String],
@@ -298,6 +302,7 @@ object RequestChannel extends Logging {
       s"Response(type=CloseConnection, request=$request)"
   }
 
+  //用于通知 Broker 的 Socket Server 组件（后面几节课我会讲到它）某个 TCP 连接通信通道开始被限流
   class StartThrottlingResponse(request: Request) extends Response(request) {
     override def toString: String =
       s"Response(type=StartThrottling, request=$request)"
@@ -313,6 +318,7 @@ class RequestChannel(val queueSize: Int, val metricNamePrefix : String, time: Ti
   import RequestChannel._
   val metrics = new RequestChannel.Metrics
   private val requestQueue = new ArrayBlockingQueue[BaseRequest](queueSize)
+  //Processor 线程池；Map 中的 Key 就是前面我们说的 processor 序号，而 Value 则对应具体的 Processor 线程对象
   private val processors = new ConcurrentHashMap[Int, Processor]()
   val requestQueueSizeMetricName = metricNamePrefix.concat(RequestQueueSizeMetric)
   val responseQueueSizeMetricName = metricNamePrefix.concat(ResponseQueueSizeMetric)
