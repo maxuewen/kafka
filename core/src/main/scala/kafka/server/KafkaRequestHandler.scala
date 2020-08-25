@@ -92,7 +92,7 @@ class KafkaRequestHandler(id: Int,
   def awaitShutdown(): Unit = shutdownComplete.await()
 
 }
-
+//I/O 线程池
 class KafkaRequestHandlerPool(val brokerId: Int,
                               val requestChannel: RequestChannel,
                               val apis: KafkaApis,

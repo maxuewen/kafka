@@ -429,6 +429,8 @@ class SocketServer(val config: KafkaConfig,
 
 }
 
+//实现了 Reactor 模式，用于处理多个client请求，client可以是producer、consumer、other broker
+//kafka.server.KafkaRequestHandlerPool
 object SocketServer {
   val MetricsGroup = "socket-server-metrics"
   val DataPlaneThreadPrefix = "data-plane"
@@ -518,6 +520,7 @@ private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQ
 /**
  * Thread that accepts and configures new connections. There is one of these per endpoint.
  */
+//这是接收和创建外部 TCP 连接的线程。每个 SocketServer 实例只会创建一个 Acceptor 线程。它的唯一目的就是创建连接，并将接收到的 Request 传递给下游的 Processor 线程处理。
 private[kafka] class Acceptor(val endPoint: EndPoint,
                               val sendBufferSize: Int,
                               val recvBufferSize: Int,
@@ -716,6 +719,8 @@ private[kafka] object Processor {
  * Thread that processes all requests from a single connection. There are N of these running in parallel
  * each of which has its own selector
  */
+//每个 SocketServer 实例默认创建若干个（num.network.threads）Processor 线程。
+//Processor 线程负责将接收到的 Request 添加到 RequestChannel 的 Request 队列上，同时还负责将 Response 返还给 Request 发送方。
 private[kafka] class Processor(val id: Int,
                                time: Time,
                                maxRequestSize: Int,
@@ -747,8 +752,12 @@ private[kafka] class Processor(val id: Int,
     override def toString: String = s"$localHost:$localPort-$remoteHost:$remotePort-$index"
   }
 
+  //每当 Processor 线程接收新的连接请求时，都会将对应的 SocketChannel 放入这个队列。
+  //后面在创建连接时（也就是调用 configureNewConnections 时），就从该队列中取出 SocketChannel，然后注册新的连接
   private val newConnections = new ArrayBlockingQueue[SocketChannel](connectionQueueSize)
+  //当 Processor 线程将 Response 返还给 Request 发送方之后，还要将 Response 放入这个临时队列
   private val inflightResponses = mutable.Map[String, RequestChannel.Response]()
+  //保存着需要被返还给发送方的所有 Response 对象，每个 Processor 线程都会维护自己的 Response 队列
   private val responseQueue = new LinkedBlockingDeque[RequestChannel.Response]()
 
   private[kafka] val metricTags = mutable.LinkedHashMap(
