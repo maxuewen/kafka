@@ -831,8 +831,8 @@ private[kafka] class Processor(val id: Int,
           // We catch all the throwables here to prevent the processor thread from exiting. We do this because
           // letting a processor exit might cause a bigger impact on the broker. This behavior might need to be
           // reviewed if we see an exception that needs the entire broker to stop. Usually the exceptions thrown would
-          // be either associated with a specific socket channel or a bad request. These exceptions are caught and
-          // processed by the individual methods above which close the failing channel and continue processing other
+          // be either associated#相关 with a specific socket channel or a bad request. These exceptions are caught and
+          // processed by the individual#个人 methods above which close the failing channel and continue processing other
           // channels. So this catch block should only ever see ControlThrowables.
           case e: Throwable => processException("Processor got uncaught exception.", e)
         }

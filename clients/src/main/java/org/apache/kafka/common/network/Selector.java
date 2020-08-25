@@ -108,7 +108,7 @@ public class Selector implements Selectable, AutoCloseable {
     private boolean outOfMemory;
     private final List<Send> completedSends;
     private final LinkedHashMap<String, NetworkReceive> completedReceives;
-    private final Set<SelectionKey> immediatelyConnectedKeys;
+    private final Set<SelectionKey> immediatelyConnectedKeys;   //#connect()方法中，SelectionKey.OP_CONNECT监听成功注册后加入这个set
     private final Map<String, KafkaChannel> closingChannels;
     private Set<SelectionKey> keysWithBufferedRead;
     private final Map<String, ChannelState> disconnected;
@@ -126,7 +126,7 @@ public class Selector implements Selectable, AutoCloseable {
     private final int failedAuthenticationDelayMs;
 
     //indicates if the previous call to poll was able to make progress in reading already-buffered data.
-    //this is used to prevent tight loops when memory is not available to read any more data
+    //this is used to prevent#阻止 tight loops when memory is not available to read any more data
     private boolean madeReadProgressLastPoll = true;
 
     /**
@@ -450,7 +450,7 @@ public class Selector implements Selectable, AutoCloseable {
             timeout = 0;
 
         if (!memoryPool.isOutOfMemory() && outOfMemory) {
-            //we have recovered from memory pressure. unmute any channel not explicitly muted for other reasons
+            //we have recovered from memory pressure#压力. unmute any channel not explicitly muted for other reasons
             log.trace("Broker no longer low on memory - unmuting incoming sockets");
             for (KafkaChannel channel : channels.values()) {
                 if (channel.isInMutableState() && !explicitlyMutedChannels.contains(channel)) {
@@ -521,7 +521,7 @@ public class Selector implements Selectable, AutoCloseable {
                 idleExpiryManager.update(nodeId, currentTimeNanos);
 
             try {
-                /* complete any connections that have finished their handshake (either normally or immediately) */
+                /* complete any connections that have finished their handshake#握手 (either normally or immediately) */
                 if (isImmediatelyConnected || key.isConnectable()) {
                     if (channel.finishConnect()) {
                         this.connected.add(nodeId);
