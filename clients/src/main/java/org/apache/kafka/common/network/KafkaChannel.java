@@ -461,7 +461,7 @@ public class KafkaChannel implements AutoCloseable {
         return transportLayer.hasBytesBuffered();
     }
 
-    @Override
+    @Override 
     public boolean equals(Object o) {
         if (this == o) {
             return true;
