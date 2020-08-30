@@ -112,7 +112,7 @@ public class KafkaChannel implements AutoCloseable {
         THROTTLE_ENDED
     }
 
-    private final String id;
+    private final String id;    //s"$localHost:$localPort-$remoteHost:$remotePort-$index"
     private final TransportLayer transportLayer;
     private final Supplier<Authenticator> authenticatorCreator;
     private Authenticator authenticator;
@@ -122,7 +122,7 @@ public class KafkaChannel implements AutoCloseable {
     private final int maxReceiveSize;
     private final MemoryPool memoryPool;
     private final ChannelMetadataRegistry metadataRegistry;
-    private NetworkReceive receive;
+    private NetworkReceive receive; //读取数据到这个对象
     private Send send;
     // Track connection and mute state of channels to enable outstanding requests on channels to be
     // processed after the channel is disconnected.

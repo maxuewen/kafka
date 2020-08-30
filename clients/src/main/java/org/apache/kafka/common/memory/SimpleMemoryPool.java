@@ -33,7 +33,7 @@ public class SimpleMemoryPool implements MemoryPool {
     protected final Logger log = LoggerFactory.getLogger(getClass()); //subclass-friendly
 
     protected final long sizeBytes;
-    protected final boolean strict;
+    protected final boolean strict;//严格的
     protected final AtomicLong availableMemory;
     protected final int maxSingleAllocationSize;
     protected final AtomicLong startOfNoMemPeriod = new AtomicLong(); //nanoseconds

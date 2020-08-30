@@ -720,6 +720,7 @@ private[kafka] object Processor {
  * each of which has its own selector
  */
 //每个 SocketServer 实例默认创建若干个（num.network.threads）Processor 线程。
+//Processor 对象的引用会保存3份，SocketServer、Accept、RequestChannel各保存一份
 //Processor 线程负责将接收到的 Request 添加到 RequestChannel 的 Request 队列上，同时还负责将 Response 返还给 Request 发送方。
 private[kafka] class Processor(val id: Int,
                                time: Time,
@@ -929,7 +930,7 @@ private[kafka] class Processor(val id: Int,
   }
 
   private def processCompletedReceives(): Unit = {
-    selector.completedReceives.forEach { receive =>
+    selector.completedReceives.forEach { receive => //NetworkReceive
       try {
         openOrClosingChannel(receive.source) match {
           case Some(channel) =>
@@ -971,7 +972,7 @@ private[kafka] class Processor(val id: Int,
             throw new IllegalStateException(s"Channel ${receive.source} removed from selector before processing completed receive")
         }
       } catch {
-        // note that even though we got an exception, we can assume that receive.source is valid.
+        // note that even though we got an exception, we can assume#假定 that receive.source is valid.
         // Issues with constructing a valid receive object were handled earlier
         case e: Throwable =>
           processChannelException(receive.source, s"Exception while processing request from ${receive.source}", e)
