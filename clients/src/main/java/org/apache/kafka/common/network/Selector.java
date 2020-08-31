@@ -112,7 +112,7 @@ public class Selector implements Selectable, AutoCloseable {
     private final Map<String, KafkaChannel> closingChannels;
     private Set<SelectionKey> keysWithBufferedRead;
     private final Map<String, ChannelState> disconnected;
-    private final List<String> connected;
+    private final List<String> connected;   //三次握手成功后加入
     private final List<String> failedSends;
     private final Time time;
     private final SelectorMetrics sensors;
@@ -418,11 +418,11 @@ public class Selector implements Selectable, AutoCloseable {
      *
      * In the "Plaintext" setting, we are using socketChannel to read & write to the network. But for the "SSL" setting,
      * we encrypt the data before we use socketChannel to write data to the network, and decrypt before we return the responses.
-     * This requires additional buffers to be maintained as we are reading from network, since the data on the wire is encrypted
+     * This requires additional buffers to be maintained#维持 as we are reading from network, since the data on the wire#电线 is encrypted
      * we won't be able to read exact no.of bytes as kafka protocol requires. We read as many bytes as we can, up to SSLEngine's
      * application buffer size. This means we might be reading additional bytes than the requested size.
      * If there is no further data to read from socketChannel selector won't invoke that channel and we have additional bytes
-     * in the buffer. To overcome this issue we added "keysWithBufferedRead" map which tracks channels which have data in the SSL
+     * in the buffer. To overcome#克服 this issue we added "keysWithBufferedRead" map which tracks channels which have data in the SSL
      * buffers. If there are channels with buffered data that can by processed, we set "timeout" to 0 and process the data even
      * if there is no more data to read from the socket.
      *
