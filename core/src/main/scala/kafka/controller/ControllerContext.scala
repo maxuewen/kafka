@@ -73,13 +73,17 @@ case class ReplicaAssignment private (replicas: Seq[Int],
 
 class ControllerContext {
   val stats = new ControllerStats
-  var offlinePartitionCount = 0
+  var offlinePartitionCount = 0 //该字段统计集群中所有离线或处于不可用状态的主题分区数量。所谓的不可用状态，Leader=-1
   var preferredReplicaImbalanceCount = 0
   val shuttingDownBrokerIds = mutable.Set.empty[Int]
   private val liveBrokers = mutable.Set.empty[Broker]
   private val liveBrokerEpochs = mutable.Map.empty[Int, Long]
-  var epoch: Int = KafkaController.InitialControllerEpoch
-  var epochZkVersion: Int = KafkaController.InitialControllerEpochZkVersion
+
+  //Kafka 使用 epochZkVersion 来判断和防止 Zombie Controller。
+  //这也就是说，原先在老 Controller 任期内的 Controller 操作在新 Controller 不能成功执行，
+  //因为新 Controller 的 epochZkVersion 要比老 Controller 的大
+  var epoch: Int = KafkaController.InitialControllerEpoch //ZooKeeper 中 /controller_epoch 节点的值
+  var epochZkVersion: Int = KafkaController.InitialControllerEpochZkVersion ///controller_epoch 节点的 dataVersion 值
 
   val allTopics = mutable.Set.empty[String]
   val partitionAssignments = mutable.Map.empty[String, mutable.Map[Int, ReplicaAssignment]]
