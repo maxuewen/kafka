@@ -380,6 +380,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
         dynamicConfigManager = new DynamicConfigManager(zkClient, dynamicConfigHandlers)
         dynamicConfigManager.startup()
 
+        //启动process线程
         socketServer.startProcessingRequests(authorizerFutures)
 
         brokerState.newState(RunningAsBroker)

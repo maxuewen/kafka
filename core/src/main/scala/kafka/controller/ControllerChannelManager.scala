@@ -47,6 +47,10 @@ object ControllerChannelManager {
   val RequestRateAndQueueTimeMetricName = "RequestRateAndQueueTimeMs"
 }
 
+/*
+  主要指责：controller给其他所有broker发送消息的具体实现
+  管理所有的kafka broker信息；每个broker下包括一个消息队列和一个线程，线程循环遍历队列中消息体给对应的broker发送消息
+ */
 class ControllerChannelManager(controllerContext: ControllerContext,
                                config: KafkaConfig,
                                time: Time,

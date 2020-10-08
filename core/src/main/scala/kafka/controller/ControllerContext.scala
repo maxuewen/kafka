@@ -86,7 +86,9 @@ class ControllerContext {
   var epochZkVersion: Int = KafkaController.InitialControllerEpochZkVersion ///controller_epoch 节点的 dataVersion 值
 
   val allTopics = mutable.Set.empty[String]
-  val partitionAssignments = mutable.Map.empty[String, mutable.Map[Int, ReplicaAssignment]]
+  //[topic, [partitionId -> ReplicaAssignment]]
+  //ReplicaAssignment中包括brokerId列表
+  val partitionAssignments = mutable.Map.empty[String, mutable.Map[Int, ReplicaAssignment]] //保存所有主题分区的副本分配情况
   private val partitionLeadershipInfo = mutable.Map.empty[TopicPartition, LeaderIsrAndControllerEpoch]
   val partitionsBeingReassigned = mutable.Set.empty[TopicPartition]
   val partitionStates = mutable.Map.empty[TopicPartition, PartitionState]
