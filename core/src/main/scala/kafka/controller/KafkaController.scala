@@ -1318,6 +1318,7 @@ class KafkaController(val config: KafkaConfig,
     }
 
     try {
+      //注册新的controller节点 & 更新epoch节点
       val (epoch, epochZkVersion) = zkClient.registerControllerAndIncrementControllerEpoch(config.brokerId)
       controllerContext.epoch = epoch
       controllerContext.epochZkVersion = epochZkVersion
