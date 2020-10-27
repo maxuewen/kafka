@@ -315,6 +315,9 @@ class TopicDeletionManager(config: KafkaConfig,
     }
   }
 
+  /**
+   * 因为当前主题无法被删除，比如分区副本正在重新分配，等这些事件完成后，重启删除操作
+   */
   private def resumeDeletions(): Unit = {
     val topicsQueuedForDeletion = Set.empty[String] ++ controllerContext.topicsToBeDeleted
     val topicsEligibleForRetry = mutable.Set.empty[String]
