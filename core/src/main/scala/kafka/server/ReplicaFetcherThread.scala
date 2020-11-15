@@ -252,7 +252,7 @@ class ReplicaFetcherThread(name: String,
 
     val builder = fetchSessionHandler.newBuilder(partitionMap.size, false)
     partitionMap.foreach { case (topicPartition, fetchState) =>
-      // We will not include a replica in the fetch request if it should be throttled.
+      // We will not include a replica in the fetch request if it should be throttled#节流的.
       if (fetchState.isReadyForFetch && !shouldFollowerThrottle(quota, fetchState, topicPartition)) {
         try {
           val logStartOffset = this.logStartOffset(topicPartition)

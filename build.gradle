@@ -19,10 +19,14 @@ import java.nio.charset.StandardCharsets
 
 buildscript {
   repositories {
-    maven { url 'https://maven.aliyun.com/repository/central' }
-    maven { url 'https://maven.aliyun.com/repository/jcenter' }
-    maven { url 'https://maven.aliyun.com/repository/google' }
-    maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+//    mavenCentral()
+//    jcenter()
+    maven { url 'http://maven.aliyun.com/nexus/content/repositories/google' }
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    maven { url "https://plugins.gradle.org/m2/" }
+    mavenLocal()
+    mavenCentral()
   }
   apply from: file('gradle/buildscript.gradle'), to: buildscript
   apply from: "$rootDir/gradle/dependencies.gradle"
@@ -52,10 +56,12 @@ spotless {
 allprojects {
 
   repositories {
-    maven { url 'https://maven.aliyun.com/repository/central' }
-    maven { url 'https://maven.aliyun.com/repository/jcenter' }
-    maven { url 'https://maven.aliyun.com/repository/google' }
-    maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+//    mavenCentral()
+    maven { url 'http://maven.aliyun.com/nexus/content/repositories/google' }
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
+    mavenLocal()
+    mavenCentral()
   }
 
   apply plugin: 'idea'

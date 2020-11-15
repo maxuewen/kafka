@@ -69,7 +69,7 @@ object LogAppendInfo {
 }
 
 /**
- * Struct to hold various quantities we compute about each message set before appending to the log
+ * Struct to hold various#各种各样的 quantities we compute about each message set before appending to the log
  *
  * @param firstOffset The first offset in the message set unless the message format is less than V2 and we are appending
  *                    to the follower.

@@ -519,6 +519,15 @@ class ZkPartitionStateMachine(config: KafkaConfig,
 }
 
 object PartitionLeaderElectionAlgorithms {
+  /**
+   *
+   * @param assignment 某一个partition下的所有副本所在的brokerId
+   * @param isr
+   * @param liveReplicas
+   * @param uncleanLeaderElectionEnabled 当isr为空的时候，是否允许选取一个非isr的副本作为leader
+   * @param controllerContext
+   * @return
+   */
   def offlinePartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int], uncleanLeaderElectionEnabled: Boolean, controllerContext: ControllerContext): Option[Int] = {
     assignment.find(id => liveReplicas.contains(id) && isr.contains(id)).orElse {
       if (uncleanLeaderElectionEnabled) {
@@ -546,9 +555,13 @@ object PartitionLeaderElectionAlgorithms {
 }
 
 sealed trait PartitionLeaderElectionStrategy
+//因为 Leader 副本下线而引发的分区 Leader 选举。
 final case class OfflinePartitionLeaderElectionStrategy(allowUnclean: Boolean) extends PartitionLeaderElectionStrategy
+//因为执行分区副本重分配操作而引发的分区 Leader 选举。
 final case object ReassignPartitionLeaderElectionStrategy extends PartitionLeaderElectionStrategy
+//因为执行 Preferred 副本 Leader 选举而引发的分区 Leader 选举。
 final case object PreferredReplicaPartitionLeaderElectionStrategy extends PartitionLeaderElectionStrategy
+//因为正常关闭 Broker 而引发的分区 Leader 选举。
 final case object ControlledShutdownPartitionLeaderElectionStrategy extends PartitionLeaderElectionStrategy
 
 sealed trait PartitionState {

@@ -19,7 +19,7 @@ package kafka.server
 
 import java.nio.ByteBuffer
 import java.util
-import java.util.Optional
+import java.util.{Objects, Optional}
 import java.util.concurrent.locks.ReentrantLock
 
 import kafka.cluster.BrokerEndPoint
@@ -31,7 +31,7 @@ import kafka.metrics.KafkaMetricsGroup
 import kafka.utils.CoreUtils.inLock
 import org.apache.kafka.common.protocol.Errors
 
-import scala.collection.{mutable, Map, Set}
+import scala.collection.{Map, Set, mutable}
 import scala.jdk.CollectionConverters._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -61,6 +61,7 @@ abstract class AbstractFetcherThread(name: String,
   type FetchData = FetchResponse.PartitionData[Records]
   type EpochData = OffsetsForLeaderEpochRequest.PartitionData
 
+  //PartitionStates 类用轮询的方式来处理要读取的多个分区
   private val partitionStates = new PartitionStates[PartitionFetchState]
   protected val partitionMapLock = new ReentrantLock
   private val partitionMapCond = partitionMapLock.newCondition()
@@ -113,8 +114,8 @@ abstract class AbstractFetcherThread(name: String,
   }
 
   override def doWork(): Unit = {
-    maybeTruncate()
-    maybeFetch()
+    maybeTruncate() // 执行副本截断操作
+    maybeFetch()  // 执行消息获取操作
   }
 
   private def maybeFetch(): Unit = {
@@ -171,6 +172,7 @@ abstract class AbstractFetcherThread(name: String,
     if (partitionsWithEpochs.nonEmpty) {
       truncateToEpochEndOffsets(partitionsWithEpochs)
     }
+    // 对于没有Leader Epoch值的分区，将日志截断到高水位值处
     if (partitionsWithoutEpochs.nonEmpty) {
       truncateToHighWatermark(partitionsWithoutEpochs)
     }
@@ -789,10 +791,13 @@ case class PartitionFetchState(fetchOffset: Long,
 
   def isReadyForFetch: Boolean = state == Fetching && !isDelayed
 
+  //被用于副本限流
   def isReplicaInSync: Boolean = lag.isDefined && lag.get <= 0
 
   def isTruncating: Boolean = state == Truncating && !isDelayed
 
+  //用于判断是否需要推迟获取对应分区的消息
+  //副本获取线程获取数据时出现错误，需要等待一段时间后重试
   def isDelayed: Boolean = delay.exists(_.getDelay(TimeUnit.MILLISECONDS) > 0)
 
   override def toString: String = {

@@ -19,6 +19,10 @@ package org.apache.kafka.clients;
 import org.apache.kafka.common.message.ApiVersionsResponseData.ApiVersionsResponseKey;
 import org.apache.kafka.common.protocol.ApiKeys;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 /**
  * Represents the min version and max version of an api key.
  *

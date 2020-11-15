@@ -32,14 +32,7 @@ import org.apache.kafka.common.record.MemoryRecords;
 import org.apache.kafka.common.record.MultiRecordsSend;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.kafka.common.requests.FetchMetadata.INVALID_SESSION_ID;
@@ -117,6 +110,7 @@ public class FetchResponse<T extends BaseRecords> extends AbstractResponse {
         }
     }
 
+    //保存的是 Response 中单个分区数据拉取的各项数据，包括从该分区的 Leader 副本拉取回来的消息、该分区的高水位值和日志起始位移值等
     public static final class PartitionData<T extends BaseRecords> {
         private final FetchResponseData.FetchablePartitionResponse partitionResponse;
 

@@ -337,6 +337,7 @@ class ZkReplicaStateMachine(config: KafkaConfig,
       }.getOrElse(false)
     }
 
+    //如果isr中只有一个replica，那么不做删除操作
     val adjustedLeaderAndIsrs: Map[TopicPartition, LeaderAndIsr] = leaderAndIsrsWithReplica.flatMap {
       case (partition, result) =>
         result.toOption.map { leaderAndIsr =>
@@ -346,6 +347,7 @@ class ZkReplicaStateMachine(config: KafkaConfig,
         }
     }
 
+    //updatesToRetry：由于版本号异常而没有更新的partition集合
     val UpdateLeaderAndIsrResult(finishedPartitions, updatesToRetry) = zkClient.updateLeaderAndIsr(
       adjustedLeaderAndIsrs, controllerContext.epoch, controllerContext.epochZkVersion)
 
